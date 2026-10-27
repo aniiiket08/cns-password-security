@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Hash Inspector{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Hash Format Inspector</h1>
+        <p>Offline heuristic classification of password hash structures, salts, and algorithms</p>
+    </div>
+</div>
+
+<!-- Notice Panel -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Inspection Input</h2>
+            <div class="panel-subtitle">Accepts laboratory text extracts or shadow-style dumps. Does not interact with live OS credential vaults.</div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="labTextInput">Paste Hashes or Shadow Records</label>
+            <textarea id="labTextInput" name="lab_text" rows="6" placeholder="alice:$6$rounds=5000$salt$shadow-sha512&#10;bob:$5$salt$shadow-sha256&#10;carol:$2b$12$saltbcrypt...&#10;5f4dcc3b5aa765d61d8327deb882cf99"></textarea>
+            <div class="form-hint">Supports colon-delimited records (<code>username:hash</code>) or standalone hash digests.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="labFileInput">Or Upload Export File (.txt, .log, .lst, .csv)</label>
+            <input type="file" id="labFileInput" name="lab_file" accept=".txt,.log,.lst,.csv">
+        </div>
+
+        <button type="submit" class="btn" style="margin-top: 14px;">
+            <i data-lucide="scan"></i>
+            <span>Classify Hash Formats</span>
+        </button>
+    </form>
+</section>
+
+<!-- Classification Results Table -->
+{% if records is not none %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Heuristic Classification Telemetry</h2>
+            <div class="panel-subtitle">Total records analyzed: {{ records|length }}</div>
+        </div>
+    </div>
+
+    {% if records %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Line</th>
+                    <th>Account / Label</th>
+                    <th>Inferred Format</th>
+                    <th>Confidence Level</th>
+                    <th>Digest Signature / Preview</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in records %}
+                <tr>
+                    <td class="mono" style="color: var(--text-muted);">#{{ row.line }}</td>
+                    <td>
+                        {% if row.username %}
+                            <strong>{{ row.username }}</strong>
+                        {% else %}
+                            <span style="color: var(--text-muted);">Unlabeled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge neutral">{{ row.format }}</span>
+                    </td>
+                    <td>
+                        {% if row.confidence == 'High' %}
+                            <span class="badge low">High Confidence</span>
+                        {% elif row.confidence == 'Medium' %}
+                            <span class="badge medium">Medium Confidence</span>
+                        {% else %}
+                            <span class="badge high">Low (Ambiguous)</span>
+                        {% endif %}
+                    </td>
+                    <td class="mono" style="color: var(--text-secondary); font-size: 11.5px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ row.hash }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i data-lucide="file-question"></i>
+        <div class="empty-state-title">No recognizable hash formats</div>
+        <div class="empty-state-desc">The provided text did not contain recognizable shadow hashes or cryptographic hexadecimal strings.</div>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% endblock %}

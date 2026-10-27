@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "auditor": "Aniket",
+    "suite": "Password Security Auditing & Controlled Attack Simulation Suite",
+    "version": "2.0.0",
+    "exported_at": "2026-10-25 06:45:01"
+  },
+  "summary": {
+    "total_tests": 1,
+    "weak": 1,
+    "medium": 0,
+    "strong": 0,
+    "common_word_matches": 1,
+    "dictionary_matches": 0,
+    "bruteforce_matches": 0,
+    "high_risk": 1
+  },
+  "tests": [
+    {
+      "timestamp": "2026-10-25 12:00:00",
+      "test_type": "Password Analysis",
+      "strength": "Weak",
+      "severity": "High",
+      "entropy": 18.0,
+      "length": 8,
+      "common_word_match": true,
+      "dictionary_match": false,
+      "bruteforce_match": false,
+      "attempts": "",
+      "rate": "",
+      "search_space": "",
+      "estimated_worst_case": "",
+      "details": "Score: 20/100"
+    }
+  ]
+}

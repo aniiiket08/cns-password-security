@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SecureAudit{% endblock %} — Password Security Audit Suite</title>
+    <!-- Inter & JetBrains Mono Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <!-- Primary Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">
+                <i data-lucide="shield-check" style="width:20px;height:20px;"></i>
+            </div>
+            <div>
+                <div class="brand-title">SecureAudit</div>
+                <div class="brand-sub">Security Suite</div>
+            </div>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-label">Overview</span>
+            <nav>
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-label">Audit & Simulation</span>
+            <nav>
+                <a href="{{ url_for('analyzer') }}" class="nav-item {% if request.endpoint == 'analyzer' %}active{% endif %}">
+                    <i data-lucide="key-round"></i>
+                    <span>Password Analyzer</span>
+                </a>
+                <a href="{{ url_for('dictionary') }}" class="nav-item {% if request.endpoint == 'dictionary' %}active{% endif %}">
+                    <i data-lucide="book-open"></i>
+                    <span>Dictionary Generator</span>
+                </a>
+                <a href="{{ url_for('hash_simulator') }}" class="nav-item {% if request.endpoint == 'hash_simulator' %}active{% endif %}">
+                    <i data-lucide="hash"></i>
+                    <span>Hash Simulator</span>
+                </a>
+                <a href="{{ url_for('hash_inspector') }}" class="nav-item {% if request.endpoint == 'hash_inspector' %}active{% endif %}">
+                    <i data-lucide="binary"></i>
+                    <span>Hash Inspector</span>
+                </a>
+                <a href="{{ url_for('brute_force') }}" class="nav-item {% if request.endpoint == 'brute_force' %}active{% endif %}">
+                    <i data-lucide="cpu"></i>
+                    <span>Brute-Force Simulator</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-label">Deliverables</span>
+            <nav>
+                <a href="{{ url_for('reports') }}" class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}">
+                    <i data-lucide="file-text"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-meta">
+                <span>Auditor</span>
+                <strong>Aniket</strong>
+            </div>
+            <div class="sidebar-meta">
+                <span>Version</span>
+                <span>v2.0.0</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                  {% if category == 'success' %}
+                    <i data-lucide="check-circle-2" style="width:16px;height:16px;"></i>
+                  {% elif category == 'danger' %}
+                    <i data-lucide="alert-circle" style="width:16px;height:16px;"></i>
+                  {% else %}
+                    <i data-lucide="alert-triangle" style="width:16px;height:16px;"></i>
+                  {% endif %}
+                  <span>{{ message }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script>
+    // Initialize Lucide icons on page load
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    });
+</script>
+</body>
+</html>

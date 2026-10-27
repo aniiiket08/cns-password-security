@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Audit Reports{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Audit Reports & Deliverables</h1>
+        <p>Export consolidated vulnerability assessments and telemetry in structured JSON and CSV formats</p>
+    </div>
+</div>
+
+<!-- Report Generation Panel -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Generate Audit Artifacts</h2>
+            <div class="panel-subtitle">Compiles all session metrics, risk distributions, and attack simulations into persistent files</div>
+        </div>
+    </div>
+
+    <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Export Package Deliverables:</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-primary);">
+                <i data-lucide="file-json" style="width: 15px; height: 15px; color: var(--accent);"></i>
+                <strong>security_audit_report.json</strong>
+                <span style="color: var(--text-muted);">— Full structured audit metadata, test counts, risk ratings, and test logs.</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-primary);">
+                <i data-lucide="file-spreadsheet" style="width: 15px; height: 15px; color: var(--accent);"></i>
+                <strong>security_audit_results.csv</strong>
+                <span style="color: var(--text-muted);">— Tabular records with timestamps, classifications, entropy ratings, and simulation results.</span>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" action="{{ url_for('generate_report') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn">
+            <i data-lucide="file-plus"></i>
+            <span>Compile & Export Reports</span>
+        </button>
+    </form>
+</section>
+
+<!-- Available Artifacts List -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Generated Files</h2>
+            <div class="panel-subtitle">Saved in the local <code>reports/</code> repository directory</div>
+        </div>
+    </div>
+
+    {% if reports %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>Format</th>
+                    <th>Storage Path</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            {% if report.name.endswith('.json') %}
+                                <i data-lucide="file-json" style="width: 15px; height: 15px; color: var(--accent);"></i>
+                            {% elif report.name.endswith('.csv') %}
+                                <i data-lucide="file-spreadsheet" style="width: 15px; height: 15px; color: var(--accent);"></i>
+                            {% else %}
+                                <i data-lucide="file" style="width: 15px; height: 15px; color: var(--text-muted);"></i>
+                            {% endif %}
+                            <span class="mono" style="font-weight: 500; color: var(--text-primary);">{{ report.name }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge neutral">{{ report.suffix[1:]|upper }} Document</span>
+                    </td>
+                    <td class="mono" style="color: var(--text-muted); font-size: 12px;">reports/{{ report.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i data-lucide="folder-open"></i>
+        <div class="empty-state-title">No reports compiled yet</div>
+        <div class="empty-state-desc">Click "Compile & Export Reports" above to write JSON and CSV audit summaries.</div>
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %}

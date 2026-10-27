@@ -1,0 +1,8 @@
+# Synthetic lab records only - not real credentials
+alice:$6$rounds=5000$testsalt$synthetic-shadow-sha512
+bob:$5$testsalt$synthetic-shadow-sha256
+carol:$2b$12$abcdefghijklmnopqrstuuSyntheticBcryptHash000000000000000000
+# 32-hex value is intentionally ambiguous between MD5 and NTLM
+sample32:5f4dcc3b5aa765d61d8327deb882cf99
+sample40:da39a3ee5e6b4b0d3255bfef95601890afd80709
+sample64:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08

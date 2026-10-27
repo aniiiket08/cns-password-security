@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Brute-Force Simulator{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Brute-Force Rate & Keyspace Simulator</h1>
+        <p>Bounded educational simulation to benchmark local hashing throughput and keyspace exhaustion</p>
+    </div>
+</div>
+
+<!-- Configuration Panel -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Simulation Parameters</h2>
+            <div class="panel-subtitle">For performance and safety within the educational laboratory, candidate length is capped at 4 characters.</div>
+        </div>
+        <div>
+            <span class="badge neutral">Bounded Execution (Max len: 4)</span>
+        </div>
+    </div>
+
+    <form method="post" id="bruteForm" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="targetInput">Target Password (Lab Specimen)</label>
+            <input type="text" id="targetInput" name="target" placeholder="e.g. key, pass, abc" required>
+            <div class="form-hint">Enter a target string to test exhaustive combinatorial matching against.</div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="maxLengthInput">Maximum Combinatorial Length</label>
+                <input type="number" id="maxLengthInput" name="max_length" value="3" min="1" max="4" required>
+                <div class="form-hint">Permitted range: 1 to 4 characters.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="charsetInput">Keyspace Character Set</label>
+                <select id="charsetInput" name="charset">
+                    <option value="lowercase">Lowercase Letters (a–z)</option>
+                    <option value="uppercase">Uppercase Letters (A–Z)</option>
+                    <option value="letters">All Letters (a–z, A–Z)</option>
+                    <option value="lowercase_digits">Lowercase + Digits (a–z, 0–9)</option>
+                    <option value="letters_digits">Letters + Digits (a–z, A–Z, 0–9)</option>
+                    <option value="digits">Numeric Digits Only (0–9)</option>
+                    <option value="letters_digits_symbols">Full Set: Letters + Digits + Symbols</option>
+                </select>
+                <div class="form-hint">Determines the alphabet base size for combinations.</div>
+            </div>
+        </div>
+
+        <button type="submit" id="runSimulationBtn" class="btn" style="margin-top: 14px;">
+            <i data-lucide="zap"></i>
+            <span id="btnRunText">Run Simulation</span>
+        </button>
+    </form>
+</section>
+
+<!-- Results Panel -->
+{% if result %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Keyspace Exhaustion Results</h2>
+            <div class="panel-subtitle">Empirical performance metrics measured during simulation</div>
+        </div>
+    </div>
+
+    {% if result.found %}
+        <div class="outcome-banner found">
+            <i data-lucide="check-circle-2" style="width: 18px; height: 18px;"></i>
+            <span>Target discovered within search space! Candidate: <code style="margin-left: 6px; font-weight: 600; color: var(--text-primary);">{{ result.candidate }}</code></span>
+        </div>
+    {% else %}
+        <div class="outcome-banner not-found">
+            <i data-lucide="x-circle" style="width: 18px; height: 18px;"></i>
+            <span>Target not found within bounded search parameters.</span>
+        </div>
+    {% endif %}
+
+    <div class="stats-strip">
+        <div class="stats-cell">
+            <div class="stats-cell-label">Evaluated Candidates</div>
+            <div class="stats-cell-value">{{ result.attempts }}</div>
+        </div>
+        <div class="stats-cell">
+            <div class="stats-cell-label">Elapsed Time</div>
+            <div class="stats-cell-value">{{ result.elapsed }} <span style="font-size:12px;color:var(--text-muted);font-weight:400;">sec</span></div>
+        </div>
+        <div class="stats-cell">
+            <div class="stats-cell-label">Measured Rate</div>
+            <div class="stats-cell-value">{{ result.rate }} <span style="font-size:12px;color:var(--text-muted);font-weight:400;">ops/sec</span></div>
+        </div>
+        <div class="stats-cell">
+            <div class="stats-cell-label">Total Search Space</div>
+            <div class="stats-cell-value">{{ result.search_space }}</div>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px;">
+        <span style="color: var(--text-secondary);">Projected worst-case keyspace exhaustion time:</span>
+        <strong style="color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">{{ result.estimated_worst_case }}</strong>
+    </div>
+</section>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("bruteForm");
+    const btn = document.getElementById("runSimulationBtn");
+    const btnText = document.getElementById("btnRunText");
+
+    if (form && btn) {
+        form.addEventListener("submit", function() {
+            btn.disabled = true;
+            btnText.innerText = "Simulating permutations…";
+            btn.style.opacity = "0.7";
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Dictionary Generator{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Dictionary Generator</h1>
+        <p>Rule-based credential list generation for authorized password-policy auditing</p>
+    </div>
+</div>
+
+<!-- Configuration Form Panel -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Wordlist Mutation Parameters</h2>
+            <div class="panel-subtitle">Provide context seeds to generate permutations combining leetspeak, suffixes, and casing rules</div>
+        </div>
+    </div>
+
+    <form method="post" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nameField">Target Identifier / Organization Name</label>
+                <input type="text" id="nameField" name="name" placeholder="e.g. acme, aniket, admin">
+                <div class="form-hint">Primary entity name or user identifier seed.</div>
+            </div>
+            <div class="form-group">
+                <label for="yearField">Year / Date Token</label>
+                <input type="text" id="yearField" name="year" placeholder="e.g. 2026, 2025">
+                <div class="form-hint">Target calendar year or foundation date.</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="keywordField">Specific Context Keyword</label>
+            <input type="text" id="keywordField" name="keyword" placeholder="e.g. corp, finance, server, audit">
+            <div class="form-hint">Department, project moniker, or contextual password keyword.</div>
+        </div>
+
+        <button type="submit" class="btn" style="margin-top: 14px;">
+            <i data-lucide="sparkles"></i>
+            <span>Generate Candidates</span>
+        </button>
+    </form>
+</section>
+
+<!-- Output Panel -->
+{% if generated %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Generated Wordlist Candidates</h2>
+            <div class="panel-subtitle">Total: {{ generated|length }} unique generated tokens (bounded for laboratory demonstration)</div>
+        </div>
+        <a href="{{ url_for('download_wordlist') }}" class="btn btn-secondary btn-sm">
+            <i data-lucide="download"></i>
+            <span>Export .txt File</span>
+        </a>
+    </div>
+
+    <div class="wordlist-preview">
+        {% for word in generated %}
+            <code title="{{ word }}">{{ word }}</code>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

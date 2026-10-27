@@ -1,0 +1,2 @@
+timestamp,test_type,strength,severity,entropy,length,common_word_match,dictionary_match,bruteforce_match,attempts,rate,search_space,estimated_worst_case,details
+2026-10-25 12:00:00,Password Analysis,Weak,High,18.0,8,True,False,False,,,,,Score: 20/100

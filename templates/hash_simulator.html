@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Hash Simulator{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Hash Simulator</h1>
+        <p>Cryptographic candidate matching and verification against SHA-256 target digests</p>
+    </div>
+</div>
+
+<!-- Educational / Context Notice -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Target Hash Configuration</h2>
+            <div class="panel-subtitle">Evaluates candidate passwords against an offline target hash using raw SHA-256 without salts</div>
+        </div>
+        <div>
+            <span class="badge neutral">Algorithm: SHA-256</span>
+        </div>
+    </div>
+
+    <!-- Demonstration Hash Block -->
+    <div style="margin-bottom: 18px;">
+        <label>Laboratory Reference Hash (Pre-computed for <code>Password123!</code>)</label>
+        <div class="code-block">
+            <span class="code-block-content" id="sampleHashText">{{ sample_hash }}</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copySampleHash()" title="Copy to clipboard">
+                <i data-lucide="copy"></i>
+                <span id="copyBtnLabel">Copy</span>
+            </button>
+        </div>
+        <div class="form-hint">Note: Unsalted SHA-256 is susceptible to precomputation attacks. Production environments require salted key-derivation functions (e.g. bcrypt, Argon2).</div>
+    </div>
+
+    <!-- Testing Form -->
+    <form method="post" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="targetHashInput">Target Hash Digest (64 hexadecimal characters)</label>
+            <input type="text" id="targetHashInput" name="target_hash" placeholder="e.g. paste 64-character SHA-256 digest here" required>
+        </div>
+
+        <div class="form-group">
+            <label for="candidatesInput">Candidate Test Passwords (one per line)</label>
+            <textarea id="candidatesInput" name="candidates" rows="6" placeholder="Password123!&#10;welcome&#10;admin123&#10;demo2026" required></textarea>
+            <div class="form-hint">Enter individual candidates to test against the target digest.</div>
+        </div>
+
+        <button type="submit" class="btn" style="margin-top: 14px;">
+            <i data-lucide="play"></i>
+            <span>Execute Candidate Match</span>
+        </button>
+    </form>
+</section>
+
+<!-- Result Panel -->
+{% if result %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Verification Outcome</h2>
+            <div class="panel-subtitle">Results from evaluating candidate dictionary entries</div>
+        </div>
+    </div>
+
+    {% if result.found %}
+        <div class="outcome-banner found">
+            <i data-lucide="check-circle-2" style="width: 18px; height: 18px;"></i>
+            <span>Match identified! A candidate produced an identical cryptographic digest.</span>
+        </div>
+
+        <div class="stats-strip">
+            <div class="stats-cell">
+                <div class="stats-cell-label">Matching Candidate</div>
+                <div class="stats-cell-value mono" style="color: var(--success); font-size: 15px;">{{ result.candidate }}</div>
+            </div>
+            <div class="stats-cell">
+                <div class="stats-cell-label">Evaluated Candidates</div>
+                <div class="stats-cell-value">{{ result.attempts }}</div>
+            </div>
+            <div class="stats-cell">
+                <div class="stats-cell-label">Cryptographic Algorithm</div>
+                <div class="stats-cell-value" style="font-size: 14px;">SHA-256 (Raw)</div>
+            </div>
+        </div>
+    {% else %}
+        <div class="outcome-banner not-found">
+            <i data-lucide="x-circle" style="width: 18px; height: 18px;"></i>
+            <span>Exhausted candidates without finding a matching digest.</span>
+        </div>
+
+        <div class="stats-strip">
+            <div class="stats-cell">
+                <div class="stats-cell-label">Total Attempts</div>
+                <div class="stats-cell-value">{{ result.attempts }}</div>
+            </div>
+            <div class="stats-cell">
+                <div class="stats-cell-label">Search Result</div>
+                <div class="stats-cell-value" style="color: var(--danger); font-size: 14px;">No Collision</div>
+            </div>
+            <div class="stats-cell">
+                <div class="stats-cell-label">Cryptographic Algorithm</div>
+                <div class="stats-cell-value" style="font-size: 14px;">SHA-256 (Raw)</div>
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<script>
+function copySampleHash() {
+    const text = document.getElementById("sampleHashText").innerText;
+    navigator.clipboard.writeText(text).then(function() {
+        const label = document.getElementById("copyBtnLabel");
+        label.innerText = "Copied!";
+        setTimeout(function() {
+            label.innerText = "Copy";
+        }, 1500);
+    });
+}
+</script>
+{% endblock %}

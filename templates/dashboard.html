@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block title %}Security Overview{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Security Overview</h1>
+        <p>Password audit activity, risk distributions, and simulation results</p>
+    </div>
+    <div class="header-status">
+        <span class="status-dot"></span>
+        <span>Audit Engine Active</span>
+    </div>
+</div>
+
+<!-- Summary Metrics (Editorial Strip) -->
+<div class="metrics-row">
+    <div class="metric-item">
+        <div class="metric-label">Total Tests</div>
+        <div class="metric-value">{{ total }}</div>
+    </div>
+    <div class="metric-item">
+        <div class="metric-label">Weak Passwords</div>
+        <div class="metric-value {% if weak > 0 %}weak{% endif %}">{{ weak }}</div>
+    </div>
+    <div class="metric-item">
+        <div class="metric-label">Medium Passwords</div>
+        <div class="metric-value {% if medium > 0 %}medium{% endif %}">{{ medium }}</div>
+    </div>
+    <div class="metric-item">
+        <div class="metric-label">Strong Passwords</div>
+        <div class="metric-value {% if strong > 0 %}strong{% endif %}">{{ strong }}</div>
+    </div>
+    <div class="metric-item">
+        <div class="metric-label">High Risk Identified</div>
+        <div class="metric-value {% if high_risk > 0 %}danger{% endif %}">{{ high_risk }}</div>
+    </div>
+</div>
+
+<!-- Main Analytics Grid -->
+<div class="grid-2">
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2 class="panel-title">Password Strength Distribution</h2>
+                <div class="panel-subtitle">Classification counts across all evaluated tests</div>
+            </div>
+        </div>
+        {% if total > 0 %}
+            <div id="strengthChart" style="height: 220px;"></div>
+        {% else %}
+            <div class="empty-state" style="padding: 32px 16px;">
+                <i data-lucide="bar-chart-2"></i>
+                <div class="empty-state-title">No test data recorded</div>
+                <div class="empty-state-desc">Evaluate credentials in Password Analyzer to generate strength telemetry.</div>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2 class="panel-title">Attack Simulation Results</h2>
+                <div class="panel-subtitle">Matches across dictionary attack, brute-force, and common-word checks</div>
+            </div>
+        </div>
+        {% if total > 0 %}
+            <div id="attackChart" style="height: 220px;"></div>
+        {% else %}
+            <div class="empty-state" style="padding: 32px 16px;">
+                <i data-lucide="target"></i>
+                <div class="empty-state-title">No simulation telemetry</div>
+                <div class="empty-state-desc">Execute bounded attack simulations to assess vulnerability surface.</div>
+            </div>
+        {% endif %}
+    </section>
+</div>
+
+<!-- Recent Activity Table -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Recent Activity</h2>
+            <div class="panel-subtitle">Latest recorded audit assessments (passwords are never logged in plaintext)</div>
+        </div>
+        {% if history %}
+            <button type="button" class="btn btn-danger btn-sm" onclick="openClearModal()">
+                <i data-lucide="trash-2"></i>
+                <span>Clear History</span>
+            </button>
+        {% endif %}
+    </div>
+
+    {% if history %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Audit Type</th>
+                    <th>Classification</th>
+                    <th>Risk Severity</th>
+                    <th>Entropy</th>
+                    <th>Length</th>
+                    <th>Dictionary Hit</th>
+                    <th>Brute-Force Hit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in history %}
+                <tr>
+                    <td class="mono" style="color: var(--text-muted); font-size: 12px;">{{ row.timestamp or "—" }}</td>
+                    <td><span class="badge neutral">{{ row.test_type or "Password Audit" }}</span></td>
+                    <td>
+                        {% if row.strength and row.strength != "—" %}
+                            <span class="badge {{ row.strength|lower }}">{{ row.strength }}</span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.severity == 'High' %}
+                            <span class="badge high">High Risk</span>
+                        {% elif row.severity == 'Medium' %}
+                            <span class="badge medium">Medium Risk</span>
+                        {% elif row.severity == 'Low' %}
+                            <span class="badge low">Low Risk</span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.entropy != "" and row.entropy != "—" and row.entropy is not none %}
+                            {{ row.entropy }} <span style="color:var(--text-muted);font-size:11px;">bits</span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.length if (row.length != "" and row.length != "—" and row.length is not none) else "—" }}</td>
+                    <td>
+                        {% if row.dictionary_match %}
+                            <span class="badge match">Match</span>
+                        {% elif row.common_word_match %}
+                            <span class="badge high">Common Word</span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.bruteforce_match %}
+                            <span class="badge match">Match</span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">None</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i data-lucide="inbox"></i>
+        <div class="empty-state-title">No audit records found</div>
+        <div class="empty-state-desc">Start by evaluating your password policies or testing a specimen in the analyzer.</div>
+        <a href="{{ url_for('analyzer') }}" class="btn btn-secondary btn-sm">
+            <i data-lucide="key-round"></i>
+            <span>Open Password Analyzer</span>
+        </a>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Confirmation Modal for Destructive Clear History -->
+<div id="clearHistoryModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-title">Clear Audit History</div>
+        <div class="modal-desc">Are you sure you want to delete all session audit records? This operation cannot be undone.</div>
+        <form method="post" action="{{ url_for('clear_history') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeClearModal()">Cancel</button>
+                <button type="submit" class="btn btn-danger btn-sm">Confirm Deletion</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openClearModal() {
+    document.getElementById('clearHistoryModal').classList.add('active');
+}
+function closeClearModal() {
+    document.getElementById('clearHistoryModal').classList.remove('active');
+}
+
+// Chart rendering if test data is present
+{% if total > 0 %}
+document.addEventListener("DOMContentLoaded", function() {
+    const chart = {{ chart_data|safe }};
+    
+    // Shared chart layout configuration
+    const baseLayout = {
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: {
+            color: '#929BAA',
+            family: 'Inter, -apple-system, sans-serif',
+            size: 11
+        },
+        margin: { t: 15, l: 30, r: 15, b: 35 },
+        xaxis: {
+            gridcolor: '#272D38',
+            linecolor: '#272D38',
+            zerolinecolor: '#272D38',
+            tickfont: { color: '#929BAA', size: 11 }
+        },
+        yaxis: {
+            gridcolor: '#272D38',
+            linecolor: '#272D38',
+            zerolinecolor: '#272D38',
+            rangemode: 'tozero',
+            dtick: 1,
+            tickfont: { color: '#929BAA', size: 11 }
+        }
+    };
+
+    const config = { displayModeBar: false, responsive: true };
+
+    Plotly.newPlot("strengthChart", [{
+        x: chart.labels,
+        y: chart.values,
+        type: "bar",
+        marker: {
+            color: ['#E36D79', '#E5AD55', '#35B889'],
+            line: { width: 0 }
+        },
+        width: 0.45
+    }], baseLayout, config);
+
+    Plotly.newPlot("attackChart", [{
+        x: chart.attack_labels,
+        y: chart.attack_values,
+        type: "bar",
+        marker: {
+            color: ['#6489E8', '#8EA9EE', '#E36D79'],
+            line: { width: 0 }
+        },
+        width: 0.35
+    }], baseLayout, config);
+});
+{% endif %}
+</script>
+{% endblock %}

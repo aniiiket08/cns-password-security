@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Password Analyzer{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Password Analyzer</h1>
+        <p>In-depth complexity verification, search-space calculation, and entropy analysis</p>
+    </div>
+</div>
+
+<!-- Input Form Panel -->
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Evaluation Target</h2>
+            <div class="panel-subtitle">Audits run strictly in local memory. Passwords are never written to disk or
+                logs.</div>
+        </div>
+    </div>
+
+    <form method="post" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="passwordInput">Password or Passphrase</label>
+            <div class="input-wrapper">
+                <input type="password" id="passwordInput" name="password"
+                    placeholder="Enter target password to analyze…" required>
+                <button type="button" class="input-action-btn" id="togglePasswordBtn" title="Toggle visibility"
+                    aria-label="Toggle password visibility">
+                    <i data-lucide="eye" id="toggleIcon"></i>
+                </button>
+            </div>
+            <div class="form-hint">Tip: Test various patterns including dictionary words, common substitutions, and long
+                passphrases.</div>
+        </div>
+        <button type="submit" class="btn" style="margin-top: 14px;">
+            <i data-lucide="shield-alert"></i>
+            <span>Run Security Audit</span>
+        </button>
+    </form>
+</section>
+
+<!-- Result Panel -->
+{% if result %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Audit Assessment</h2>
+            <div class="panel-subtitle">Calculated complexity score and cryptographic resistance metrics</div>
+        </div>
+        <div>
+            {% if result.severity == 'High' %}
+            <span class="badge high">High Risk Severity</span>
+            {% elif result.severity == 'Medium' %}
+            <span class="badge medium">Medium Risk Severity</span>
+            {% else %}
+            <span class="badge low">Low Risk Severity</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Score Overview Block -->
+    <div class="score-overview">
+        <div>
+            <div class="metric-label">Composite Security Score</div>
+            <div class="score-main">
+                <span class="score-val">{{ result.score }}</span>
+                <span class="score-max">/ 100</span>
+                <span class="badge {{ result.strength|lower }}" style="margin-left: 8px;">{{ result.strength }}</span>
+            </div>
+            <div class="progress-bar-container" style="width: 220px;">
+                <div class="progress-bar-fill {{ result.strength|lower }}" style="width: {{ result.score }}%;"></div>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div class="metric-label">Common Dictionary Pattern</div>
+            <div style="margin-top: 4px;">
+                {% if result.dictionary_match %}
+                <span class="badge high">Detected in Wordlist</span>
+                {% else %}
+                <span class="badge low">No Direct Match</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Strip -->
+    <div class="stats-strip">
+        <div class="stats-cell">
+            <div class="stats-cell-label">Character Length</div>
+            <div class="stats-cell-value">{{ result.length }}</div>
+        </div>
+        <div class="stats-cell">
+            <div class="stats-cell-label">Information Entropy</div>
+            <div class="stats-cell-value">{{ result.entropy }} <span
+                    style="font-size:12px;color:var(--text-muted);font-weight:400;">bits</span></div>
+        </div>
+        <div class="stats-cell">
+            <div class="stats-cell-label">Character Space Size</div>
+            <div class="stats-cell-value">
+                {% if result.entropy > 0 %}
+                2<sup>{{ result.entropy|int }}</sup>
+                {% else %}
+                0
+                {% endif %}
+            </div>
+        </div>
+        <div class="stats-cell">
+            <div class="stats-cell-label">Pattern Repetition</div>
+            <div class="stats-cell-value" style="font-size: 14px;">
+                {{ "Detected" if result.repeated_pattern else "None" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Two-column: Breakdown & Recommendations -->
+    <div class="grid-2" style="margin-bottom: 0;">
+        <div>
+            <h3 class="panel-title" style="margin-bottom: 10px;">Composition Breakdown</h3>
+            <table class="checks-table">
+                <tbody>
+                    <tr>
+                        <td>Lowercase Characters (a–z)</td>
+                        <td class="check-status {{ 'passed' if result.lowercase else 'failed' }}">
+                            {{ "Present" if result.lowercase else "Missing" }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Uppercase Characters (A–Z)</td>
+                        <td class="check-status {{ 'passed' if result.uppercase else 'failed' }}">
+                            {{ "Present" if result.uppercase else "Missing" }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Numeric Digits (0–9)</td>
+                        <td class="check-status {{ 'passed' if result.digits else 'failed' }}">
+                            {{ "Present" if result.digits else "Missing" }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Special Symbols & Punctuation</td>
+                        <td class="check-status {{ 'passed' if result.special else 'failed' }}">
+                            {{ "Present" if result.special else "Missing" }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Sequential Run (e.g. 1234, abcd)</td>
+                        <td class="check-status {{ 'flagged' if result.sequence_detected else 'passed' }}">
+                            {{ "Detected" if result.sequence_detected else "None" }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <h3 class="panel-title" style="margin-bottom: 10px;">Audit Recommendations</h3>
+            {% if result.recommendations %}
+            <ul class="recommendations-list">
+                {% for rec in result.recommendations %}
+                <li class="recommendation-item">
+                    <i data-lucide="arrow-right"></i>
+                    <span>{{ rec }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="recommendation-item">
+                <i data-lucide="check"></i>
+                <span>Meets recommended baseline standards.</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const pwdInput = document.getElementById("passwordInput");
+        const toggleBtn = document.getElementById("togglePasswordBtn");
+        const toggleIcon = document.getElementById("toggleIcon");
+
+        if (toggleBtn && pwdInput) {
+            toggleBtn.addEventListener("click", function () {
+                if (pwdInput.type === "password") {
+                    pwdInput.type = "text";
+                    toggleIcon.setAttribute("data-lucide", "eye-off");
+                } else {
+                    pwdInput.type = "password";
+                    toggleIcon.setAttribute("data-lucide", "eye");
+                }
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
