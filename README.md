@@ -141,4 +141,8 @@ Unit tests cover the core modules, not every Flask route, upload or report expor
 
 ## 📄 Disclaimer
 
+<<<<<<< HEAD
 For educational use, coursework and authorized security testing only. Do not use it to access, test or compromise accounts without explicit permission.
+=======
+For educational use, coursework and authorized security testing only. Do not use it to access, test or compromise accounts without explicit permission.
+>>>>>>> bdd55447d5db0258e3662fe2d0a76bdbfeec530e
